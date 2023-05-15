@@ -105,6 +105,10 @@ namespace MOAction
             UnorthodoxHostile.Add(3575);
             UnorthodoxFriendly.Add(17055);
             UnorthodoxFriendly.Add(7443);
+            HealableBattleNpcs = new();
+            //These are NPC classified as BattleNpc and Enemy, where healing actions work on
+            HealableBattleNpcs.Add(3054); //Paiyo Reiyo - Tam Tara Deepcroft (hard)
+            HealableBattleNpcs.Add(13117); //Haurchefant - Dragon song Reprise Ultimate
         }
 
         public void SetConfig(MOActionConfiguration config)
@@ -297,6 +301,14 @@ namespace MOAction
             {
                 BattleNpc b = (BattleNpc)target;
                 if (b.BattleNpcKind != BattleNpcSubKind.Enemy) return action.CanTargetFriendly || 
+                        action.CanTargetParty ||
+                        action.CanTargetSelf ||
+                        action.TargetArea ||
+                        UnorthodoxFriendly.Contains((uint)action.RowId);
+            }
+            //Custom case for specific npcs that are healable non-party frame existing
+            if(HealableBattleNpcs.Contains(target.DataId)){
+                return action.CanTargetFriendly ||
                         action.CanTargetParty ||
                         action.CanTargetSelf ||
                         action.TargetArea ||
