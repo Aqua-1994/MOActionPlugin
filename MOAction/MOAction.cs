@@ -50,6 +50,7 @@ namespace MOAction
 
         private HashSet<uint> UnorthodoxFriendly;
         private HashSet<uint> UnorthodoxHostile;
+        private HashSet<uint> HealableBattleNpcs;
 
         public HashSet<ulong> enabledActions;
 
@@ -296,15 +297,17 @@ namespace MOAction
                     action.CanTargetParty ||
                     action.CanTargetSelf ||
                     action.TargetArea ||
-                    action.RowId == 17055 || action.RowId == 7443;
+                    UnorthodoxFriendly.Contains((uint)action.RowId);
             if (target.ObjectKind == ObjectKind.BattleNpc)
             {
                 BattleNpc b = (BattleNpc)target;
-                if (b.BattleNpcKind != BattleNpcSubKind.Enemy) return action.CanTargetFriendly || 
+                if (!(b.BattleNpcKind == BattleNpcSubKind.Enemy || b.BattleNpcKind == BattleNpcSubKind.BattleNpcPart)){
+                    return action.CanTargetFriendly ||
                         action.CanTargetParty ||
                         action.CanTargetSelf ||
                         action.TargetArea ||
                         UnorthodoxFriendly.Contains((uint)action.RowId);
+                }
             }
             //Custom case for specific npcs that are healable non-party frame existing
             if(HealableBattleNpcs.Contains(target.DataId)){
@@ -314,7 +317,7 @@ namespace MOAction
                         action.TargetArea ||
                         UnorthodoxFriendly.Contains((uint)action.RowId);
             }
-            return action.CanTargetHostile || 
+            return action.CanTargetHostile ||
                 action.TargetArea ||
                 UnorthodoxHostile.Contains((uint)action.RowId);
         }
