@@ -45,6 +45,7 @@ namespace MOAction
 
         private HashSet<uint> UnorthodoxFriendly;
         private HashSet<uint> UnorthodoxHostile;
+        private HashSet<uint> HealableBattleNpcs;
 
         public HashSet<ulong> enabledActions;
 
@@ -67,9 +68,9 @@ namespace MOAction
 
         public MOAction(ISigScanner scanner,
                         IClientState clientstate,
-                        IDataManager datamanager, 
-                        ITargetManager targetmanager, 
-                        IObjectTable objects, 
+                        IDataManager datamanager,
+                        ITargetManager targetmanager,
+                        IObjectTable objects,
                         IKeyState keystate,
                         IGameGui gamegui,
                         IGameInteropProvider hookprovider,
@@ -112,6 +113,10 @@ namespace MOAction
             {
                 3575
             };
+             HealableBattleNpcs = new(){
+             3054, //Paiyo Reiyo - Tam Tara Deepcroft (hard)
+             13117 //Haurchefant - Dragon song Reprise Ultimate
+             };
         }
 
         public void SetConfig(MOActionConfiguration config)
@@ -310,6 +315,14 @@ namespace MOAction
                         action.TargetArea ||
                         UnorthodoxFriendly.Contains((uint)action.RowId);
                 }
+            }
+            //Custom case for specific npcs that are healable non-party frame existing
+            if(HealableBattleNpcs.Contains(target.DataId)){
+                return action.CanTargetFriendly ||
+                        action.CanTargetParty ||
+                        action.CanTargetSelf ||
+                        action.TargetArea ||
+                        UnorthodoxFriendly.Contains((uint)action.RowId);
             }
             return action.CanTargetHostile ||
                 action.TargetArea ||
