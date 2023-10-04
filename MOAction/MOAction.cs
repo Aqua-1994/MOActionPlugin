@@ -144,7 +144,7 @@ namespace MOAction
 
         private unsafe void HookUseAction()
         {
-            SafeMemory.WriteBytes(Address.GtQueuePatch, new byte[] { 0xEB });
+            //SafeMemory.WriteBytes(Address.GtQueuePatch, new byte[] { 0xEB });
             requestActionHook = hookprovider.HookFromAddress((IntPtr)ActionManager.Addresses.UseAction.Value, new OnRequestActionDetour(HandleRequestAction));
             requestActionHook.Enable();
         }
@@ -163,7 +163,7 @@ namespace MOAction
                 requestActionHook.Dispose();
                 uiMoEntityIdHook.Dispose();
                 
-                SafeMemory.WriteBytes(Address.GtQueuePatch, new byte[] { 0x74 });
+                //SafeMemory.WriteBytes(Address.GtQueuePatch, new byte[] { 0x74 });
             }
         }
 
