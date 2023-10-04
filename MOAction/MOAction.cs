@@ -65,7 +65,7 @@ namespace MOAction
         private unsafe ActionManager* AM;
         private readonly int IdOffset = (int)Marshal.OffsetOf<FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject>("ObjectID");
 
-        public MOAction(SigScanner scanner,
+        public MOAction(ISigScanner scanner,
                         IClientState clientstate,
                         IDataManager datamanager, 
                         ITargetManager targetmanager, 
@@ -76,8 +76,7 @@ namespace MOAction
                         IPluginLog pluginLog
                         )
         {
-            Address = new();
-            Address.Setup(scanner);
+            Address = new(scanner);
             clientstate.Login += LoadClientModules;
             clientstate.Logout += ClearClientModules;
             if (clientstate.IsLoggedIn){

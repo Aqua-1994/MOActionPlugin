@@ -10,10 +10,10 @@ using MOAction.Configuration;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Keys;
 using System.Diagnostics;
-using SigScanner = Dalamud.Game.SigScanner;
 using System.Text;
 using Newtonsoft.Json;
 using Dalamud.Plugin.Services;
+using Dalamud.Game;
 
 namespace MOAction
 {
@@ -59,7 +59,7 @@ namespace MOAction
         private ITargetManager targetManager;
         private IDataManager dataManager;
         private ICommandManager commandManager;
-        private SigScanner SigScanner;
+        private ISigScanner SigScanner;
 
         unsafe public MOActionPlugin(DalamudPluginInterface pluginInterface,
                                     ICommandManager commands,
@@ -67,7 +67,7 @@ namespace MOAction
                                     IGameGui gamegui,
                                     IKeyState keystate,
                                     IObjectTable objects,
-                                    SigScanner scanner,
+                                    ISigScanner scanner,
                                     IClientState clientstate,
                                     ITargetManager targetmanager,
                                     IPluginLog pluginLog,
