@@ -41,9 +41,6 @@ namespace MOAction
         public List<MoActionStack> Stacks { get; set; }
         private Lumina.Excel.ExcelSheet<Lumina.Excel.GeneratedSheets.Action> RawActions;
 
-        public IntPtr fieldMOLocation;
-        public IntPtr focusTargLocation;
-        public IntPtr regularTargLocation;
         public IntPtr uiMoEntityId = IntPtr.Zero;
 
         private HashSet<uint> UnorthodoxFriendly;
@@ -87,9 +84,6 @@ namespace MOAction
                 LoadClientModules();
             }
 
-            fieldMOLocation = Address.FieldMO;
-            focusTargLocation = Address.FocusTarg;
-            regularTargLocation = Address.RegularTarg;
             
             dataManager = datamanager;
 
@@ -324,14 +318,13 @@ namespace MOAction
         {
             return objectTable.CreateObjectReference(uiMoEntityId);
         }
-        public uint GetFieldMoPtr() => (uint)Marshal.ReadInt32(fieldMOLocation);
         public GameObject GetFocusPtr()
         {
-            return objectTable.CreateObjectReference(Marshal.ReadIntPtr(focusTargLocation));
+            return targetManager.FocusTarget;
         }
         public GameObject GetRegTargPtr()
         {
-            return objectTable.CreateObjectReference(regularTargLocation - IdOffset);
+            return targetManager.Target;
         }
         public GameObject NewFieldMo() => targetManager.MouseOverTarget;
 
