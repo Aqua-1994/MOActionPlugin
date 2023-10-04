@@ -104,11 +104,14 @@ namespace MOAction
             uiMoEntityIdHook = hookprovider.HookFromAddress(Address.SetUiMouseoverEntityId, new OnSetUiMouseoverEntityId(HandleUiMoEntityId));
 
             enabledActions = new();
-            UnorthodoxFriendly = new();
-            UnorthodoxHostile = new();
-            UnorthodoxHostile.Add(3575);
-            UnorthodoxFriendly.Add(17055);
-            UnorthodoxFriendly.Add(7443);
+            UnorthodoxFriendly = new(){
+                17055,
+                7443
+            };
+            UnorthodoxHostile = new()
+            {
+                3575
+            };
         }
 
         public void SetConfig(MOActionConfiguration config)
