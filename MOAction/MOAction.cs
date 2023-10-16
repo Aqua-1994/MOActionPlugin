@@ -80,11 +80,12 @@ namespace MOAction
             Address = new(scanner);
             clientstate.Login += LoadClientModules;
             clientstate.Logout += ClearClientModules;
-            if (clientstate.IsLoggedIn){
+            if (clientstate.IsLoggedIn)
+            {
                 LoadClientModules();
             }
 
-            
+
             dataManager = datamanager;
 
             RawActions = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>();
@@ -101,7 +102,7 @@ namespace MOAction
 
             pluginLog.Info("===== M O A C T I O N =====");
             pluginLog.Debug("SetUiMouseoverEntityId address {SetUiMouseoverEntityId}", Address.SetUiMouseoverEntityId);
-            
+
             uiMoEntityIdHook = hookprovider.HookFromAddress(Address.SetUiMouseoverEntityId, new OnSetUiMouseoverEntityId(HandleUiMoEntityId));
 
             enabledActions = new();
@@ -113,7 +114,7 @@ namespace MOAction
             {
                 3575
             };
-             HealableBattleNpcs = new(){
+            HealableBattleNpcs = new(){
              3054, //Paiyo Reiyo - Tam Tara Deepcroft (hard)
              13117 //Haurchefant - Dragon song Reprise Ultimate
              };
@@ -134,7 +135,8 @@ namespace MOAction
                 AM = ActionManager.Instance();
                 getGroupTimer = Marshal.GetDelegateForFunctionPointer<GetGroupTimerDelegate>((IntPtr)ActionManager.Addresses.GetRecastGroupDetail.Value);
             }
-            catch (Exception e) {
+            catch (Exception e)
+            {
                 pluginLog.Warning(e.Message);
                 pluginLog.Warning(e.StackTrace);
                 pluginLog.Warning(e.InnerException.ToString());
@@ -149,7 +151,14 @@ namespace MOAction
 
         private unsafe void HookUseAction()
         {
-            //SafeMemory.WriteBytes(Address.GtQueuePatch, new byte[] { 0xEB });
+            //read current bytes at GtQueuePatch for Dispose
+            SafeMemory.ReadBytes(Address.GtQueuePatch, 2, out var prePatch);
+            Address.preGtQueuePatchData = prePatch;
+
+            //Apply 2 NOOP actions there (0x90 is noop right?)
+            SafeMemory.WriteBytes(Address.GtQueuePatch, new byte[] { 0x90, 0x90 });
+
+
             requestActionHook = hookprovider.HookFromAddress((IntPtr)ActionManager.Addresses.UseAction.Value, new OnRequestActionDetour(HandleRequestAction));
             requestActionHook.Enable();
         }
@@ -167,8 +176,10 @@ namespace MOAction
             {
                 requestActionHook.Dispose();
                 uiMoEntityIdHook.Dispose();
-                
-                //SafeMemory.WriteBytes(Address.GtQueuePatch, new byte[] { 0x74 });
+
+                //re-write the original 2 bytes that were there
+                //6.5: 0x75 , 0x49 (when printed out i got "uI", and referencing a hex table that'd be 0x75 and 0x49) but this would mean I don't need to know this anymore.
+                SafeMemory.WriteBytes(Address.GtQueuePatch, Address.preGtQueuePatchData);
             }
         }
 
@@ -192,13 +203,13 @@ namespace MOAction
                 return requestActionHook.Original(param_1, actionType, actionID, param_4, param_5, param_6, param_7, param_8);
             }
             var (action, target) = GetActionTarget((uint)actionID, actionType);
-            
+
             if (action == null) return requestActionHook.Original(param_1, actionType, actionID, param_4, param_5, param_6, param_7, param_8);
 
             // Earthly Star is the only GT that changes to a different action.
             if (action.RowId == 7439 && clientState.LocalPlayer.StatusList.Any(x => x.StatusId == 1248 || x.StatusId == 1224))
                 return requestActionHook.Original(param_1, actionType, actionID, param_4, param_5, param_6, param_7, param_8);
-            
+
 
             long objectId = target == null ? 0xE0000000 : target.ObjectId;
 
@@ -216,12 +227,12 @@ namespace MOAction
         private unsafe (Lumina.Excel.GeneratedSheets.Action action, GameObject target) GetActionTarget(uint ActionID, uint ActionType)
         {
             var action = RawActions.GetRow(ActionID);
-            
+
             uint adjusted = AM->GetAdjustedActionId(ActionID);
 
             if (action == null) return (null, null);
             var applicableActions = Stacks.Where(entry => entry.BaseAction.RowId == action.RowId || entry.BaseAction.RowId == adjusted || AM->GetAdjustedActionId(entry.BaseAction.RowId) == adjusted);
-            
+
             MoActionStack stackToUse = null;
             foreach (var entry in applicableActions)
             {
@@ -235,7 +246,7 @@ namespace MOAction
                     break;
                 }
             }
-            
+
             if (stackToUse == null)
             {
                 return (null, null);
@@ -259,13 +270,13 @@ namespace MOAction
             else
                 timer = GetGroupRecastTimer(action.CooldownGroup);
             if (action.MaxCharges == 0) return timer->IsActive ^ 1;
-            return (int)((action.MaxCharges+1) * (timer->Elapsed / timer->Total));
+            return (int)((action.MaxCharges + 1) * (timer->Elapsed / timer->Total));
         }
 
         private unsafe bool CanUseAction(StackEntry targ, uint actionType)
         {
             if (targ.Target == null || targ.Action == null) return false;
-            
+
             var action = targ.Action;
             action = RawActions.GetRow(AM->GetAdjustedActionId(targ.Action.RowId));
             if (action == null) return false; // just in case
@@ -274,7 +285,7 @@ namespace MOAction
             {
                 return !targ.Target.ObjectNeeded;
             }
-         
+
             // Check if ability is on CD or not (charges are fun!)
             unsafe
             {
@@ -291,11 +302,11 @@ namespace MOAction
                 }
             }
             if (Configuration.RangeCheck)
-            { 
+            {
                 var player = clientState.LocalPlayer;
                 var player_ptr = (FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*)player.Address;
                 var target_ptr = (FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*)target.Address;
-                
+
                 uint err = ActionManager.GetActionInRangeOrLoS(action.RowId, player_ptr, target_ptr);
                 if (action.TargetArea) return true;
                 else if (err != 0 && err != 565) return false;
@@ -308,7 +319,8 @@ namespace MOAction
             if (target.ObjectKind == ObjectKind.BattleNpc)
             {
                 BattleNpc b = (BattleNpc)target;
-                if (!(b.BattleNpcKind == BattleNpcSubKind.Enemy || b.BattleNpcKind == BattleNpcSubKind.BattleNpcPart)){
+                if (!(b.BattleNpcKind == BattleNpcSubKind.Enemy || b.BattleNpcKind == BattleNpcSubKind.BattleNpcPart))
+                {
                     return action.CanTargetFriendly ||
                         action.CanTargetParty ||
                         action.CanTargetSelf ||
@@ -317,7 +329,8 @@ namespace MOAction
                 }
             }
             //Custom case for specific npcs that are healable non-party frame existing
-            if(HealableBattleNpcs.Contains(target.DataId)){
+            if (HealableBattleNpcs.Contains(target.DataId))
+            {
                 return action.CanTargetFriendly ||
                         action.CanTargetParty ||
                         action.CanTargetSelf ||
