@@ -281,10 +281,11 @@ namespace MOAction
                 }
             }
 
+            var player = clientState.LocalPlayer;
             var target_ptr = (FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*)target.Address;
             if (Configuration.RangeCheck)
             { 
-                var player = clientState.LocalPlayer;
+                
                 var player_ptr = (FFXIVClientStructs.FFXIV.Client.Game.Object.GameObject*)player.Address;
 
                 uint err = ActionManager.GetActionInRangeOrLoS(action.RowId, player_ptr, target_ptr);
@@ -292,6 +293,9 @@ namespace MOAction
                 else if (err != 0 && err != 565) return false;
             }
 
+            pluginLog.Debug("is {actionName} usable at level: {level} available for player {playername} with {playerlevel}?",action.Name, action.ClassJobLevel,player.Name,player.Level);
+            if(action.ClassJobLevel > clientState.LocalPlayer.Level) return false;
+            
             pluginLog.Verbose("is {actionname} a area spell/ability? {answer}", action.Name, action.TargetArea);
             if(action.TargetArea) return true;
 
