@@ -215,6 +215,7 @@ namespace MOAction
             MoActionStack stackToUse = null;
             foreach (var entry in applicableActions)
             {
+                pluginLog.Verbose("{stackname} for job {job}",entry.BaseAction.Name,entry.Job.);
                 if (entry.Modifier == VirtualKey.NO_KEY)
                 {
                     stackToUse = entry;
@@ -293,12 +294,18 @@ namespace MOAction
                 else if (err != 0 && err != 565) return false;
             }
 
-            pluginLog.Debug("is {actionName} usable at level: {level} available for player {playername} with {playerlevel}?",action.Name, action.ClassJobLevel,player.Name,player.Level);
-            if(action.ClassJobLevel > clientState.LocalPlayer.Level) return false;
+            //Skip actions you cannot use when synced down, excluding role actions that can be used even when syncing down.
+            pluginLog.Verbose("is {actionname} a role action?: {answer}",action.Name, action.IsRoleAction);
+            if(!action.IsRoleAction){
+                pluginLog.Verbose("is {actionName} usable at level: {level} available for player {playername} with {playerlevel}?",action.Name, action.ClassJobLevel,player.Name,player.Level);
+                if(!action.IsRoleAction && action.ClassJobLevel > clientState.LocalPlayer.Level) return false;
+            }
             
+            //area of effect spells do not require a target to work.
             pluginLog.Verbose("is {actionname} a area spell/ability? {answer}", action.Name, action.TargetArea);
             if(action.TargetArea) return true;
 
+            //handoff to game native code, returns true if the actionManager declares that the action can be used on the target specified
             pluginLog.Verbose("can I use action: {rowid} with name {actionname} on target {targetid} with name {targetname}", action.RowId.ToString(), action.Name, target.DataId, target.Name);
             return ActionManager.CanUseActionOnTarget(action.RowId,target_ptr);
         }
