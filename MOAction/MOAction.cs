@@ -215,7 +215,6 @@ namespace MOAction
             MoActionStack stackToUse = null;
             foreach (var entry in applicableActions)
             {
-                pluginLog.Verbose("{stackname} for job {job}",entry.BaseAction.Name,entry.Job.);
                 if (entry.Modifier == VirtualKey.NO_KEY)
                 {
                     stackToUse = entry;
