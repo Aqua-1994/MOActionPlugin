@@ -297,7 +297,7 @@ namespace MOAction
             pluginLog.Verbose("is {actionname} a role action?: {answer}",action.Name, action.IsRoleAction);
             if(!action.IsRoleAction){
                 pluginLog.Verbose("is {actionName} usable at level: {level} available for player {playername} with {playerlevel}?",action.Name, action.ClassJobLevel,player.Name,player.Level);
-                if(!action.IsRoleAction && action.ClassJobLevel > clientState.LocalPlayer.Level) return false;
+                if(action.ClassJobLevel > clientState.LocalPlayer.Level) return false;
             }
             
             //area of effect spells do not require a target to work.
